@@ -55,15 +55,13 @@ async def predict_churn(data: ChurnInput, background_tasks: BackgroundTasks):
         # Convert to DataFrame - model will handle preprocessing internally
         df_input = pd.DataFrame([mapped_data])
         
-        # Convert numeric columns to float as required by model schema
-        float_columns = ['usage_frequency', 'payment_delay_days', 'total_spend']
-        for col in float_columns:
-            if col in df_input.columns:
-                df_input[col] = df_input[col].astype(float)
-        
+        # Convert all numeric columns to float as required by model schema
+        for col in df_input.select_dtypes(include='integer').columns:
+            df_input[col] = df_input[col].astype(float)
+
         logger.info(f"Input DataFrame shape: {df_input.shape}, columns: {df_input.columns.tolist()}")
         logger.info(f"DataFrame dtypes: {df_input.dtypes.to_dict()}")
-        
+
         # Predict - model has built-in preprocessing
         model = get_model()
         prediction = model.predict(df_input)[0]
@@ -135,11 +133,9 @@ async def predict_batch(data_list: List[ChurnInput], background_tasks: Backgroun
                 # Convert to DataFrame - model will handle preprocessing internally
                 df_input = pd.DataFrame([mapped_data])
                 
-                # Convert numeric columns to float as required by model schema
-                float_columns = ['usage_frequency', 'payment_delay_days', 'total_spend']
-                for col in float_columns:
-                    if col in df_input.columns:
-                        df_input[col] = df_input[col].astype(float)
+                # Convert all numeric columns to float as required by model schema
+                for col in df_input.select_dtypes(include='integer').columns:
+                    df_input[col] = df_input[col].astype(float)
                 
                 # Predict - model has built-in preprocessing
                 model = get_model()

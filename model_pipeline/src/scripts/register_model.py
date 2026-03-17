@@ -7,8 +7,8 @@ import os
 from src.mlflow_utils.model_registry import ModelRegistry
 from src.utility.helper import load_config
 
-os.environ["AWS_ACCESS_KEY_ID"] = "minio"
-os.environ["AWS_SECRET_ACCESS_KEY"] = "minio123"
+os.environ["AWS_ACCESS_KEY_ID"] = "admin"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "admin123"
 os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 os.environ["MLFLOW_S3_ENDPOINT_URL"] = "http://localhost:9000"
 
@@ -25,6 +25,7 @@ def main():
     register_parser = subparsers.add_parser("register", help="Register a model")
     register_parser.add_argument("--run-id", required=True, help="MLflow run ID")
     register_parser.add_argument("--model-name", required=True, help="Model name")
+    register_parser.add_argument("--artifact-path", default="model", help="Artifact path used when logging the model (default: 'model')")
     register_parser.add_argument("--description", help="Model description")
 
     alias_parser = subparsers.add_parser('set-alias', help='Set model alias')
@@ -46,6 +47,16 @@ def main():
     info_parser = subparsers.add_parser("info", help="Get model info")
     info_parser.add_argument("--model-name", required=True, help="Model name")
 
+    stage_parser = subparsers.add_parser("transition-stage", help="Transition model version to a stage")
+    stage_parser.add_argument("--model-name", required=True, help="Model name")
+    stage_parser.add_argument("--version", required=True, help="Model version")
+    stage_parser.add_argument(
+        "--stage",
+        required=True,
+        choices=["Staging", "Production", "Archived"],
+        help="Stage to transition to",
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -60,7 +71,7 @@ def main():
 
     if args.command == "register":
         logger.info(f"Register model from run: {args.run_id=}")
-        model_uri = f"runs:/{args.run_id}/model"
+        model_uri = f"runs:/{args.run_id}/{args.artifact_path}"
 
         model_version = registry.register_model(
             model_uri=model_uri,
@@ -124,6 +135,17 @@ def main():
         
         for version in info['versions']:
             logger.info(f"  v{version['version']}: stage={version['stage']}, status={version['status']}")
+
+    elif args.command == "transition-stage":
+        logger.info(f"Transitioning {args.model_name} v{args.version} to {args.stage}")
+        
+        registry.transition_model_version_stage(
+            model_name=args.model_name,
+            version=args.version,
+            stage=args.stage,
+        )
+        
+        logger.info(f"Model version {args.version} transitioned to {args.stage}")
 
 
 if __name__ == "__main__":

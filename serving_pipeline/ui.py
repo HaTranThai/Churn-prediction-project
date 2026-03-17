@@ -21,16 +21,16 @@ def predict_single(age, gender, tenure, usage_freq, support_calls,
     """Single prediction"""
     
     payload = {
-        "Age": int(age),
-        "Gender": gender,
-        "Tenure": int(tenure),
-        "Usage_Frequency": int(usage_freq),
-        "Support_Calls": int(support_calls),
-        "Payment_Delay": int(payment_delay),
-        "Subscription_Type": subscription,
-        "Contract_Length": contract,
-        "Total_Spend": float(total_spend),
-        "Last_Interaction": int(last_interaction)
+        "age": int(age),
+        "gender": gender,
+        "tenure_months": int(tenure),
+        "usage_frequency": int(usage_freq),
+        "support_calls": int(support_calls),
+        "payment_delay_days": int(payment_delay),
+        "subscription_type": subscription,
+        "contract_length": contract,
+        "total_spend": float(total_spend),
+        "last_interaction_days": int(last_interaction)
     }
     
     try:
@@ -96,8 +96,15 @@ def predict_batch(file) -> Tuple[pd.DataFrame, str]:
         if missing_cols:
             return None, f"Missing columns: {', '.join(missing_cols)}"
         
-        # Prepare batch payload
-        records = df[required_cols].to_dict('records')
+        # Prepare batch payload and map to API format (lowercase)
+        mapping = {
+            'Age': 'age', 'Gender': 'gender', 'Tenure': 'tenure_months',
+            'Usage_Frequency': 'usage_frequency', 'Support_Calls': 'support_calls',
+            'Payment_Delay': 'payment_delay_days', 'Subscription_Type': 'subscription_type',
+            'Contract_Length': 'contract_length', 'Total_Spend': 'total_spend',
+            'Last_Interaction': 'last_interaction_days'
+        }
+        records = df[required_cols].rename(columns=mapping).to_dict('records')
         
         # Call batch API
         response = requests.post(
@@ -154,16 +161,16 @@ def map_feature_store_to_api_format(df: pd.DataFrame) -> dict:
     # Map feature store columns to API format
     # Default values if columns don't exist
     payload = {
-        "Age": int(row.get('age', row.get('Age', 30))),
-        "Gender": str(row.get('gender', row.get('Gender', 'Male'))).capitalize(),
-        "Tenure": int(row.get('tenure_months', row.get('Tenure', 12))),
-        "Usage_Frequency": int(row.get('usage_frequency', row.get('Usage_Frequency', row.get('avg_monthly_usage', 15)))),
-        "Support_Calls": int(row.get('support_calls', row.get('Support_Calls', row.get('support_tickets_90d', 0)))),
-        "Payment_Delay": int(row.get('payment_delay', row.get('Payment_Delay', row.get('late_payments_12m', 0)))),
-        "Subscription_Type": str(row.get('subscription_type', row.get('Subscription_Type', row.get('plan_type', 'Standard')))).capitalize(),
-        "Contract_Length": str(row.get('contract_length', row.get('Contract_Length', row.get('contract_type', 'Monthly')))).capitalize(),
-        "Total_Spend": float(row.get('total_spend', row.get('Total_Spend', 500.0))),
-        "Last_Interaction": int(row.get('last_interaction', row.get('Last_Interaction', row.get('num_logins_last_30d', 15))))
+        "age": int(row.get('age', row.get('Age', 30))),
+        "gender": str(row.get('gender', row.get('Gender', 'Male'))).capitalize(),
+        "tenure_months": int(row.get('tenure_months', row.get('Tenure', 12))),
+        "usage_frequency": int(row.get('usage_frequency', row.get('Usage_Frequency', row.get('avg_monthly_usage', 15)))),
+        "support_calls": int(row.get('support_calls', row.get('Support_Calls', row.get('support_tickets_90d', 0)))),
+        "payment_delay_days": int(row.get('payment_delay', row.get('Payment_Delay', row.get('late_payments_12m', 0)))),
+        "subscription_type": str(row.get('subscription_type', row.get('Subscription_Type', row.get('plan_type', 'Standard')))).capitalize(),
+        "contract_length": str(row.get('contract_length', row.get('Contract_Length', row.get('contract_type', 'Monthly')))).capitalize(),
+        "total_spend": float(row.get('total_spend', row.get('Total_Spend', 500.0))),
+        "last_interaction_days": int(row.get('last_interaction', row.get('Last_Interaction', row.get('num_logins_last_30d', 15))))
     }
     
     return payload

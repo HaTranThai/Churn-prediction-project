@@ -2,3 +2,6 @@
     remote = mys3
 ['remote "mys3"']
     url = s3://churn-mlops/churn-data
+    endpointurl = http://localhost:9000
+    access_key_id = admin
+    secret_access_key = admin123

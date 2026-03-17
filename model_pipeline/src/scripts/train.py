@@ -6,6 +6,8 @@ import argparse
 import pandas as pd
 import yaml
 from loguru import logger
+import matplotlib
+matplotlib.use('Agg')
 
 import pandas as pd
 import yaml
@@ -18,8 +20,8 @@ from src.model.xgboost_trainer import GenericBinaryClassifierTrainer
 from src.utility.helper import load_config
 import os
 
-os.environ["AWS_ACCESS_KEY_ID"] = "minio"
-os.environ["AWS_SECRET_ACCESS_KEY"] = "minio123"
+os.environ["AWS_ACCESS_KEY_ID"] = "admin"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "admin123"
 os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 os.environ["MLFLOW_S3_ENDPOINT_URL"] = "http://localhost:9000"
 

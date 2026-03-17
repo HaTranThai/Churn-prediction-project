@@ -36,9 +36,11 @@ async def check_drift(
     Note: Classification performance metrics require ground truth labels in production data.
     """
     try:
-        # Set default paths
-        ref_path = reference_path or "/home/mlops/Repository/aio2025-mlops-project01/serving_pipeline/original_data/reference_data.csv"
-        curr_path = current_path or "/home/mlops/Repository/aio2025-mlops-project01/serving_pipeline/original_data/current_data.csv"
+        # Set default paths - Adjusted for the project structure
+        # Use relative paths or a more robust location mechanism
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        ref_path = reference_path or os.path.join(base_dir, "api", "data", "reference_data.csv")
+        curr_path = current_path or os.path.join(base_dir, "api", "data", "current_data.csv")
         
         logger.info(f"Loading reference data from: {ref_path}")
         logger.info(f"Loading current data from: {curr_path} (last {days} days)")
@@ -47,26 +49,29 @@ async def check_drift(
         try:
             reference_df = load_reference_data(ref_path)
             current_df = load_current_data(curr_path, days=days)
-            print(reference_df.head())
         except FileNotFoundError as e:
+            logger.error(f"Data file not found: {str(e)}")
             raise HTTPException(status_code=404, detail=str(e))
         except ValueError as e:
+            logger.error(f"Value error loading data: {str(e)}")
             raise HTTPException(status_code=400, detail=str(e))
         
         logger.info(f"Reference data shape: {reference_df.shape}")
         logger.info(f"Current data shape: {current_df.shape}")
         
-        # Define feature columns for drift monitoring
+        # Define feature columns for drift monitoring - Updated to match new schema
         feature_columns = [
-            'Age', 'Gender', 'Tenure', 'Usage_Frequency', 'Support_Calls',
-            'Payment_Delay', 'Subscription_Type', 'Contract_Length',
-            'Total_Spend', 'Last_Interaction'
+            'age', 'gender', 'tenure_months', 'usage_frequency', 'support_calls',
+            'payment_delay_days', 'subscription_type', 'contract_length',
+            'total_spend', 'last_interaction_days'
         ]
         
         # Filter to only existing columns
         existing_features = [col for col in feature_columns if col in reference_df.columns and col in current_df.columns]
         
         if not existing_features:
+            logger.error(f"Available columns in reference: {reference_df.columns.tolist()}")
+            logger.error(f"Available columns in current: {current_df.columns.tolist()}")
             raise HTTPException(
                 status_code=400, 
                 detail="No common feature columns found between reference and current data"
@@ -83,31 +88,31 @@ async def check_drift(
         
         # Check if we can do classification metrics
         #  need BOTH target AND prediction in BOTH datasets
-        has_ref_target = 'Churn' in reference_df.columns
+        has_ref_target = 'churned' in reference_df.columns
         has_ref_prediction = 'prediction' in reference_df.columns
-        has_curr_target = 'Churn' in current_df.columns  
+        has_curr_target = 'churned' in current_df.columns  
         has_curr_prediction = 'prediction' in current_df.columns
         
         if has_ref_target and has_ref_prediction and has_curr_target and has_curr_prediction:
             # Both datasets have ground truth and predictions
             logger.info("Classification metrics available: Both datasets have target and prediction")
-            ref_data['target'] = reference_df['Churn']
+            ref_data['target'] = reference_df['churned']
             ref_data['prediction'] = reference_df['prediction']
-            curr_data['target'] = current_df['Churn']
+            curr_data['target'] = current_df['churned']
             curr_data['prediction'] = current_df['prediction']
             include_classification = True
             
         elif has_ref_prediction and has_curr_prediction:
             #  Only prediction drift (no performance metrics)
             logger.info("Prediction drift only: No ground truth in production data")
-            # Just monitor prediction distribution drift
+            # Just monitor prediction distribution distribution drift
             ref_data['prediction'] = reference_df['prediction']
             curr_data['prediction'] = current_df['prediction']
             # Don't set target - Evidently will only compute prediction drift
             include_classification = False
             
         else:
-            logger.info("No classification metrics: Missing prediction columns")
+            logger.info("No classification metrics: Missing prediction or target columns")
         
         # Generate HTML report path if needed
         html_path = None

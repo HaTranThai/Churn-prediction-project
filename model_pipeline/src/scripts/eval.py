@@ -8,14 +8,16 @@ import pandas as pd
 from loguru import logger
 import os
 import mlflow
+import matplotlib
+matplotlib.use('Agg')
 
 from src.model.evaluator import ModelEvaluator
 from src.model.xgboost_trainer import ExperimentTracker
 from src.utility.helper import load_config
 
 # [IMPORTANT] SETUP docker, remember to get rid of these hardcoded!
-os.environ["AWS_ACCESS_KEY_ID"] = "minio"
-os.environ["AWS_SECRET_ACCESS_KEY"] = "minio123"
+os.environ["AWS_ACCESS_KEY_ID"] = "admin"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "admin123"
 os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 os.environ["MLFLOW_S3_ENDPOINT_URL"] = "http://localhost:9000"
 

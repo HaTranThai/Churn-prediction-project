@@ -5,30 +5,30 @@ from typing import Optional
 class ChurnInput(BaseModel):
     """Input schema for churn prediction"""
     
-    Age: int = Field(..., ge=18, le=65, description="Customer age")
-    Gender: Literal["Male", "Female"] = Field(..., description="Customer gender")
-    Tenure: int = Field(..., ge=1, le=60, description="Months with company")
-    Usage_Frequency: int = Field(..., ge=1, le=30, description="Monthly usage frequency")
-    Support_Calls: int = Field(..., ge=0, le=10, description="Number of support calls")
-    Payment_Delay: int = Field(..., ge=0, le=30, description="Payment delay in days")
-    Subscription_Type: Literal["Basic", "Standard", "Premium"] = Field(..., description="Subscription tier")
-    Contract_Length: Literal["Monthly", "Quarterly", "Annual"] = Field(..., description="Contract duration")
-    Total_Spend: float = Field(..., ge=100, le=1000, description="Total amount spent")
-    Last_Interaction: int = Field(..., ge=1, le=30, description="Days since last interaction")
+    age: int = Field(..., ge=18, le=65, description="Customer age")
+    gender: Literal["Male", "Female"] = Field(..., description="Customer gender")
+    tenure_months: int = Field(..., ge=1, le=60, description="Months with company")
+    usage_frequency: int = Field(..., ge=1, le=30, description="Monthly usage frequency")
+    support_calls: int = Field(..., ge=0, le=10, description="Number of support calls")
+    payment_delay_days: int = Field(..., ge=0, le=30, description="Payment delay in days")
+    subscription_type: Literal["Basic", "Standard", "Premium"] = Field(..., description="Subscription tier")
+    contract_length: Literal["Monthly", "Quarterly", "Annual"] = Field(..., description="Contract duration")
+    total_spend: float = Field(..., ge=100, le=1000, description="Total amount spent")
+    last_interaction_days: int = Field(..., ge=1, le=30, description="Days since last interaction")
     
     class Config:
         json_schema_extra = {
             "example": {
-                "Age": 30,
-                "Gender": "Female",
-                "Tenure": 39,
-                "Usage_Frequency": 14,
-                "Support_Calls": 5,
-                "Payment_Delay": 18,
-                "Subscription_Type": "Standard",
-                "Contract_Length": "Annual",
-                "Total_Spend": 932.0,
-                "Last_Interaction": 17
+                "age": 30,
+                "gender": "Female",
+                "tenure_months": 39,
+                "usage_frequency": 14,
+                "support_calls": 5,
+                "payment_delay_days": 18,
+                "subscription_type": "Standard",
+                "contract_length": "Annual",
+                "total_spend": 932.0,
+                "last_interaction_days": 17
             }
         }
 
